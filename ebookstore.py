@@ -5,7 +5,7 @@
 3a. View all: Show all books in tabulate - Done
 3b. Enter book: Ask user for name, author, qty. Add +1 to previous ID for new ID - Done
 3c. Update book: Ask user for ID of book to update. Ask user to update Title, Author or Qty - Done
-3d. Ask user for ID of book to delete.
+3d. Ask user for ID of book to delete. - Done
 3e. Ask user for name of book to find a specific book
 3f. Exit closes program and ends DB connection
 4. Display welcome message and say if table has been found or created. Use tabulate module for formatting
@@ -15,6 +15,7 @@
 
 import sqlite3
 from tabulate import tabulate
+
 
 def ebookstore():
     """ Check for or create table called books. Table populated with base books """
@@ -38,13 +39,14 @@ def ebookstore():
             (3003, 'The Lion, the Witch and the Wardrobe', 'C.S. Lewis', 25),
             (3004, 'The Lord of the Rings', 'J.R.R Tolkien', 37),
             (3005, 'Alice in Wonderland', 'Lewis Carroll', 12)
-            ]
+        ]
 
         # Insert base books info into table
-        insert_base_books = '''INSERT INTO books(id, Title, Author, Qty) VALUES(?, ?, ?, ?)'''
-        cursor.executemany(insert_base_books, base_books)
+        sql_insert_base_books = '''INSERT INTO books(id, Title, Author, Qty) VALUES(?, ?, ?, ?)'''
+        cursor.executemany(sql_insert_base_books, base_books)
         db.commit()
         print("Books table created\n")
+
 
 def view_all():
     """ Display all rows in books table """
@@ -52,6 +54,7 @@ def view_all():
     cursor.execute('''SELECT * FROM books''')
     rows = cursor.fetchall()
     print(tabulate(rows, headers=["Book ID", "Book Name", "Book Author", "QTY"], tablefmt="rounded_grid"))
+
 
 def add_book():
     """ Add book to database with unique id number """
@@ -78,6 +81,7 @@ def add_book():
     db.commit()
     print("Book added to the Books table")
 
+
 def update_book():
     """ Update book information for the users choice of book """
 
@@ -88,7 +92,11 @@ def update_book():
             cursor.execute('''SELECT id FROM books WHERE id=?''', (update_book_id,))
             check_id = cursor.fetchone() is not None
             if check_id == True:
-                print("Book found in Database.")
+                print("\nThe following Book was found in the Database.")
+                cursor.execute('''SELECT id, Title, Author, Qty FROM books WHERE id=?''', (update_book_id,))
+                display_id = cursor.fetchall()
+                print(tabulate(display_id, headers=["Book ID", "Book Name", "Book Author", "QTY"],
+                               tablefmt="rounded_grid"))
                 break
             while True:
                 if check_id == False:
@@ -100,7 +108,7 @@ def update_book():
     # Ask user what information to update
     while True:
         try:
-            update_choice = int(input("Select an option number below:"
+            update_choice = int(input("\nEnter an option number below:"
                                       "\n1 - Update book name"
                                       "\n2 - Update book author name"
                                       "\n3 - Update book qty"
@@ -138,6 +146,48 @@ def update_book():
             break
 
 
+def delete_book():
+    while True:
+        try:
+            delete_book_id = int(input("Enter the ID of the book you want to delete: "))
+            cursor.execute('''SELECT id FROM books WHERE id=?''', (delete_book_id,))
+            check_id = cursor.fetchone() is not None
+            if check_id == True:
+                print("\nThe following Book was found in the Database.")
+                cursor.execute('''SELECT id, Title, Author, Qty FROM books WHERE id=?''', (delete_book_id,))
+                display_id = cursor.fetchall()
+                print(tabulate(display_id, headers=["Book ID", "Book Name", "Book Author", "QTY"],
+                               tablefmt="rounded_grid"))
+                break
+            while True:
+                if check_id == False:
+                    print("\nBook not found in Database. Try again\n")
+                    break
+        except ValueError:
+            print("\nThat was the wrong input. Try again\n")
+
+    # Asks user to confirm deletion. Then deletes book from database
+    while True:
+        try:
+            delete_choice = int(
+                input("\nAre you sure you want to delete this book from the database? Enter an option number below:"
+                      "\n1 - Yes"
+                      "\n2 - No"
+                      "\nEnter option: "))
+            if delete_choice == 1:
+                cursor.execute('''DELETE FROM books where id=?''', (delete_book_id,))
+                print("\nBook has been deleted from the database")
+                db.commit()
+                break
+            elif delete_choice == 2:
+                print("\nYou chose to not delete the book. Returning to menu")
+                break
+            while True:
+                if delete_choice != 1 or delete_choice != 2:
+                    print("\nThat is not a valid answer. Try again")
+                    break
+        except ValueError:
+            print("\nThat was the wrong input. Try again\n")
 
 
 # Create and connect to db
@@ -148,10 +198,7 @@ ebookstore()
 '''add_book()'''
 '''view_all()'''
 '''update_book()'''
-'''view_all()'''
-
-
-
+'''delete_book()'''
 
 ''' add welcome message'''
 '''ebookstore()'''

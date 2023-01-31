@@ -4,8 +4,8 @@
 3. Define functions for the following 6 options:
 3a. View all: Show all books in tabulate - Done
 3b. Enter book: Ask user for name, author, qty. Add +1 to previous ID for new ID - Done
-3c. Update book: Ask user for ID of book to update. Ask user to update Title, Author or Qty
-3d. Ask user for ID of book to delete. (Keep ID same?)
+3c. Update book: Ask user for ID of book to update. Ask user to update Title, Author or Qty - Done
+3d. Ask user for ID of book to delete.
 3e. Ask user for name of book to find a specific book
 3f. Exit closes program and ends DB connection
 4. Display welcome message and say if table has been found or created. Use tabulate module for formatting
@@ -17,10 +17,10 @@ import sqlite3
 from tabulate import tabulate
 
 def ebookstore():
-    """ Check for or create table called books. Table populated with base books"""
+    """ Check for or create table called books. Table populated with base books """
 
     # Checks if book table already exists. Displays appropriate message
-    cursor.execute(''' SELECT count(name) FROM sqlite_master WHERE type='table' AND name='books' ''')
+    cursor.execute(''' SELECT count(name) FROM sqlite_master WHERE type = 'table' AND name = 'books' ''')
     if cursor.fetchone()[0] == 1:
         print("Books table found\n")
 
@@ -44,17 +44,17 @@ def ebookstore():
         insert_base_books = '''INSERT INTO books(id, Title, Author, Qty) VALUES(?, ?, ?, ?)'''
         cursor.executemany(insert_base_books, base_books)
         db.commit()
-        print("Book table created\n")
+        print("Books table created\n")
 
 def view_all():
-    """ Display all rows in books table"""
+    """ Display all rows in books table """
 
     cursor.execute('''SELECT * FROM books''')
     rows = cursor.fetchall()
     print(tabulate(rows, headers=["Book ID", "Book Name", "Book Author", "QTY"], tablefmt="rounded_grid"))
 
 def add_book():
-    """ Add book to database with unique id number"""
+    """ Add book to database with unique id number """
 
     # Request book information from user
     book_name = input("Please enter the name of the book: ")
@@ -73,9 +73,71 @@ def add_book():
     new_book = [(new_id, book_name, book_author, book_qty)]
 
     # Insert new book to table
-    insert_new_book = '''INSERT INTO books (id, Title, Author, Qty) VALUES(?, ?, ?, ?)'''
-    cursor.executemany(insert_new_book, new_book)
+    sql_insert_new_book = '''INSERT INTO books(id, Title, Author, Qty) VALUES(?, ?, ?, ?)'''
+    cursor.executemany(sql_insert_new_book, new_book)
     db.commit()
+    print("Book added to the Books table")
+
+def update_book():
+    """ Update book information for the users choice of book """
+
+    # Ask user which book to update and check if book id exists in database
+    while True:
+        try:
+            update_book_id = int(input("Enter the ID of the book you want to update: "))
+            cursor.execute('''SELECT id FROM books WHERE id=?''', (update_book_id,))
+            check_id = cursor.fetchone() is not None
+            if check_id == True:
+                print("Book found in Database.")
+                break
+            while True:
+                if check_id == False:
+                    print("\nBook not found in Database. Try again\n")
+                    break
+        except ValueError:
+            print("\nThat was the wrong input. Try again\n")
+
+    # Ask user what information to update
+    while True:
+        try:
+            update_choice = int(input("Select an option number below:"
+                                      "\n1 - Update book name"
+                                      "\n2 - Update book author name"
+                                      "\n3 - Update book qty"
+                                      "\n4 - Back to menu"
+                                      "\nEnter Option: "))
+            break
+        except ValueError:
+            print("\nThat was the wrong input. Try again\n")
+
+    while True:
+        # Update book name
+        if update_choice == 1:
+            update_book_name = input("Enter new book name: ")
+            cursor.execute('''UPDATE books SET Title = ? WHERE id = ?''', (update_book_name, update_book_id))
+            db.commit()
+            break
+
+        # Update book author name
+        elif update_choice == 2:
+            update_book_author = input("Enter new author name: ")
+            cursor.execute('''UPDATE books SET Author = ? WHERE id = ?''', (update_book_author, update_book_id))
+            db.commit()
+            break
+
+        # Update book qty
+        elif update_choice == 3:
+            update_book_qty = input("Enter new qty: ")
+            cursor.execute('''UPDATE books SET Qty = ? WHERE id = ?''', (update_book_qty, update_book_id))
+            db.commit()
+            break
+
+        # Return to main menu
+        elif update_choice == 4:
+            print("\nReturning to main menu\n")
+            break
+
+
 
 
 # Create and connect to db
@@ -84,8 +146,9 @@ cursor = db.cursor()
 
 ebookstore()
 '''add_book()'''
-view_all()
-
+'''view_all()'''
+'''update_book()'''
+'''view_all()'''
 
 
 

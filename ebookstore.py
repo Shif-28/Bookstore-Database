@@ -264,6 +264,10 @@ def search_book():
             print("\n❌ Returning to main menu\n")
             break
 
+def end():
+    print("\nBye!")
+    db.close()
+    exit()
 
 # Create and connect to db
 db = sqlite3.connect('ebookstore')
@@ -301,9 +305,7 @@ while True:
         search_book()
 
     elif menu == "6":
-        print("\nBye!")
-        db.close()
-        exit()
+        end()
 
     else:
         print("\n❌ That is the wrong input. Please try again.\n")
